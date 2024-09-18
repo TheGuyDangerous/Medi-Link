@@ -3,9 +3,9 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { supabase } from '@/lib/supabase'
 import bcrypt from "bcryptjs"
 
-// Add this interface near the top of the file
+// Update this interface near the top of the file
 interface CustomSession extends Session {
-  user?: Session["user"] & { role?: string }
+  user: (Session["user"] & { role?: string }) | undefined
 }
 
 interface CustomUser extends User {
@@ -57,10 +57,13 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }): Promise<CustomSession> {
-      if (session?.user) {
-        (session.user as CustomSession["user"]).role = token.role as string
-      }
-      return session as CustomSession
+      return {
+        ...session,
+        user: session.user ? {
+          ...session.user,
+          role: token.role as string | undefined
+        } : undefined
+      } as CustomSession
     }
   },
   pages: {
